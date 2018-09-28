@@ -15,26 +15,32 @@ class MoviesController < ApplicationController
   end
 
   def index
+    
+    if(params[:sort] == 'title' || params[:sort] == 'date')
+      session[:sort_choice] = params[:sort]
+    end
+    
+    @selected_ratings = params[:ratings]
+    if(!(@selected_ratings.nil?))
+      session[:ratings_keys] = @selected_ratings.keys
+    elsif(!(session.exists?))
+      session[:ratings_keys] = Movie.all_ratings
+    end
+    
     @all_ratings = Movie.all_ratings    # decides what boxes will exist
-    @ratings_keys = Movie.all_ratings   # decides what boxes will be pre-checked
-    sort_choice = params[:sort]
-    case sort_choice
+    @ratings_keys = session[:ratings_keys]   # decides what boxes will be pre-checked
+    
+    case session[:sort_choice]
     when 'title'
-      @movies = Movie.order('title')
+      @movies = Movie.where(:rating => session[:ratings_keys]).order('title')
       @titleClicked = true
       @dateClicked = false
     when 'date'
-      @movies = Movie.order('release_date')
+      @movies = Movie.where(:rating => session[:ratings_keys]).order('release_date')
       @titleClicked = false
       @dateClicked = true
     else
-      @selected_ratings = params[:ratings]
-      if(@selected_ratings.nil?)
-        @movies = Movie.all
-      else
-        @ratings_keys = @selected_ratings.keys
-        @movies = Movie.where(:rating => @ratings_keys).order(:title => :asc)
-      end
+      @movies = Movie.where(:rating => session[:ratings_keys]).order(:title => :asc)
       @titleClicked = false
       @dateClicked = false
     end
